@@ -1,0 +1,90 @@
+@page {
+    margin-left: 30px;
+}
+
+a {
+    color: #fff;
+    text-decoration: none;
+}
+
+table {
+    font-size: x-small;
+}
+
+tfoot tr td {
+    font-weight: bold;
+    font-size: x-small;
+}
+
+pre {
+    font-size: 12px;
+    line-height: 1.6;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.invoice table td,
+tr,
+th {
+    margin: 15px;
+    padding: 5px;
+    border: 0.5px solid black
+}
+
+.invoice h3 {
+    margin-left: 15px;
+    font-size: 14px;
+}
+
+.information {
+    /*background-color: #60A7A6;*/
+    color: #333;
+    font-size: 14px;
+}
+
+.information .logo {
+    margin: 5px;
+}
+
+.information table {
+    padding: 5px;
+    word-break: break-all;
+}
+
+body {
+    font-family: 'Verdana', 'Arial', 'sans-serif', 'Calibri';
+    color: #333;
+    font-size: 10px;
+    margin: 0px;
+}
+
+.caption {
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.table-detail {
+    border: 0.5px solid black;
+    border-collapse: collapse;
+    font-size: 10px;
+}
+
+.table-detail td,
+tr,
+th {
+    padding: 5px;
+    border: .5px solid black;
+}
+
+.table-detail th {
+    background-color: #f0f0f0;
+}
+
+p {
+    margin: 0px;
+}
+
+.table-title {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
