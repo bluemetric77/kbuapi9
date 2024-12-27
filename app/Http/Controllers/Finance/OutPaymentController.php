@@ -132,7 +132,7 @@ class OutPaymentController extends Controller
             'ref_date.required'=>'Tanggal harus diisi',
             'trans_code.required'=>'Voucher harus diisi',
             'paid_id.required'=>'Kas/Bank harus diisi',
-            'partner_id.required'=>'Supplier harus diisi'
+            'partner_id.required'=>'Supplier harus diisi',
             'sysid_submission.required'=>'Nomor permintaann pembayaran harus diisi',
             'sysid_submission.exists'=>'Nomor permintaan pembayaran :input tidak ditemukan',
         ]);

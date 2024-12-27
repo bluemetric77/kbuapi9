@@ -105,8 +105,8 @@
 				<td>{{$line->descriptions}}</td>
 				<td>{{$line->part_number}}</td>
 				<td align="right">{{number_format($line->qty_invoice,0,',','.')}}</td>
-				<td align="right">{{number_format($line->purchase_price,0,',','.')}}</td>
-				<td align="right">{{number_format($line->prc_discount1,2,',','.')}}</td>
+				<td align="right">{{number_format($line->price,0,',','.')}}</td>
+				<td align="right">{{number_format($line->prc_discount,2,',','.')}}</td>
 				<td align="right">{{number_format($line->prc_tax,2,',','.')}}</td>
 				<td align="right">{{number_format($line->total,2,',','.')}}</td>
 			</tr>
