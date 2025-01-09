@@ -10,19 +10,20 @@ use Illuminate\Http\Request;
 use PagesHelp;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 
 class EmployeeController extends Controller
 {
     public function show(Request $request){
-        $filter = isset($request->filter) ? $request->filter :'';
-        $limit = $request->limit;
-        $descending = $request->descending=="true";
+        $filter     = isset($request->filter) ? $request->filter :'';
+        $limit      = $request->limit;
+        $sorting    = ($request->descending=="true") ? 'desc':'asc';
         $sortBy = $request->sortBy;
 
         $data= Employee::from('m_employee as a')
         ->selectRaw('a.pool_code,a.sysid,a.emp_id,a.emp_name,a.hire_date,a.pob,dob,b.descriptions as department,
-        a.current_address,a.phone_number1,a.phone_number2,a.email,a.is_active')
+        a.current_address,a.phone_number1,a.phone_number2,a.email,a.is_active,pin,citizen_number,uuid_rec')
         ->leftjoin('m_department as b','a.dept_id','=','b.sysid');
         if (!($filter=='')){
             $filter='%'.trim($filter).'%';
@@ -31,18 +32,16 @@ class EmployeeController extends Controller
                ->orwhere('a.phone_number1','like',$filter)
                ->orwhere('a.citizen_number','like',$filter);
         }
-        if ($descending) {
-            $data=$data->orderBy($sortBy,'desc')->paginate($limit);
-        } else {
-            $data=$data->orderBy($sortBy,'asc')->paginate($limit);
-        }
+
+        $data=$data->orderBy($sortBy,$sorting)->paginate($limit);
+
         return response()->success('Success',$data);
     }
 
     public function destroy(Request $request){
-        $sysid=$request->sysid;
-        $data=Employee::where('sysid',$sysid)->first();
-        if (!($data==null)) {
+        $uuid=$request->uuid_rec;
+        $data=Employee::where('uuid_rec',$uuid)->first();
+        if ($data) {
             $data->delete();
             return response()->success('Success','Data berhasil dihapus');
         } else {
@@ -50,8 +49,8 @@ class EmployeeController extends Controller
         }
     }
     public function get(Request $request){
-        $personal_id=$request->id;
-        $data=Employee::find($personal_id);
+        $uuid_rec=$request->uuid_rec;
+        $data=Employee::where('uuid_rec',$uuid_rec)->first();
         return response()->success('Success',$data);
     }
     public function document(Request $request){
@@ -63,22 +62,22 @@ class EmployeeController extends Controller
         return response()->success('Success',$data);
     }
     public function post(Request $request){
-        $data= $request->json()->all();
-        $opr=$data['operation'];
-        $where=$data['where'];
-        $rec=$data['data'];
+        $data = $request->json()->all();
+        $rec  = $data['data'];
         $rec['pool_code']=PagesHelp::PoolCode($request);
-        unset($rec['photo']);
+
         $validator=Validator::make($rec,[
             'emp_id'=>'bail|required',
             'emp_id'=>'bail|required',
             'current_address'=>'bail|required',
-            'phone_number1'=>'bail|required'
+            'phone_number1'=>'bail|required',
+            'pin'=>'bail|required',
         ],[
             'emp_id.required'=>'ID karyawan harus diisi',
             'emp_id.required'=>'Nama karaywan harus diisi',
             'current_address.required'=>'Alamat harus diisi',
             'phone_number1.required'=>'No. Telepon 1 harus diisi',
+            'pin.required'=>'ID Absensi haru di ',
         ]);
 
         if ($validator->fails()){
@@ -86,13 +85,31 @@ class EmployeeController extends Controller
         }
         $rec['update_timestamp']=Date('Y-m-d H:i:s');
         try{
-            if ($opr=='updated'){
-                Employee::where($where)
-                    ->update($rec);
-            } else if ($opr='inserted'){
-                unset($rec['sysid']);
-                Employee::insert($rec);
+            $employe=Employee::where('uuid_rec',$rec['uuid_rec'] ??'')->first();
+            if (!$employe) {
+                $employe= new Employee();
+                $employe->uuid_rec=Str::uuid();
             }
+            $employe->emp_id = $rec['emp_id'];
+            $employe->emp_name = $rec['emp_name'];
+            $employe->pin      = $rec['pin'];
+            $employe->dob      = $rec['dob'];
+            $employe->pob      = $rec['pob'];
+            $employe->current_address = $rec['current_address'];
+            $employe->dept_id   = $rec['dept_id'];
+            $employe->emp_level = $rec['emp_level'];
+            $employe->hire_date = $rec['hire_date'];
+            $employe->resign_date = $rec['resign_date'] ?? null;
+            $employe->experience  = $rec['experience'];
+            $employe->education   = $rec['education'];
+            $employe->training    = $rec['training'];
+            $employe->pool_code     = $rec['pool_code'];
+            $employe->phone_number1 = $rec['phone_number1'];
+            $employe->phone_number2 = $rec['phone_number2'];
+            $employe->email     = $rec['email'];
+            $employe->is_active = $rec['is_active'] ?? '1';
+            $employe->save();
+
             return response()->success('Success','Simpan data Berhasil');
 		} catch (Exception $e) {
             return response()->error('',501,$e);

@@ -87,15 +87,20 @@ class SPJController extends Controller
         $where = $data['where'];
         $rec=$data['data'];
         $id=$where['sysid'];
-        $data = Operation::selectRaw('doc_number,is_cancel,is_closed,is_ops_closed,ref_date')->where('sysid', $id)->first();
+        $data = Operation::selectRaw('doc_number,is_cancel,is_closed,is_ops_closed,ref_date,pool_code')->where('sysid', $id)->first();
+        if (!$data) {
+            return response()->error('', 501, 'Order ' . $data->doc_number . ' tidak ditemukan');
+        }
         $slimit=Date('Y-m-d');
         $limit=date_create($slimit);
         $limit=$limit->modify("-2 day");
-        /*if ($rec['pool_code']=='SKBM') {
+
+        if ($data->pool_code=='SKBM') {
             $limit=$limit->modify("-365 day");
         } else {
             $limit=$limit->modify("-2 day");
-        }*/
+        }
+
         $limit=date_format($limit,'Y-m-d');
         if ($data->ref_date<$limit) {
             return response()->error('', 501, 'SPJ ' . $data->doc_number . ' tidak bisa diubah atau dibatalkan (lebih dari 2 hari)');
@@ -109,41 +114,36 @@ class SPJController extends Controller
         DB::beginTransaction();
         try {
             $data = Operation::where('sysid', $id)->first();
-            if ($data) {
-                $info=Operation::selectRaw('checklist_doc,driver_id,helper_id,conductor_id')->where('sysid',$id)->first();
-                DB::update("UPDATE m_vehicle a INNER JOIN t_operation b ON a.vehicle_no=b.vehicle_no
-                     SET a.vehicle_status='Siap',last_operation=-1
-                     WHERE b.sysid=?",[$id]);
-                DB::update("UPDATE t_vehicle_checklist1 a INNER JOIN t_operation b ON a.vehicle_no=b.vehicle_no
-                     SET a.doc_ops='',sysid_ops=-1,is_used=0
-                     WHERE a.sysid_ops=?",[$id]);
-                Driver::where('employee_id',$info->driver_id)->update(['on_duty'=>'0']);
-                Driver::where('employee_id',$info->helper_id)->update(['on_duty'=>'0']);
-                Driver::where('employee_id',$info->conductor_id)->update(['on_duty'=>'0']);
-                $row['header']=Operation::where('sysid',$id)->first();
-                $row['detail']=DB::table('t_operation_route')->where('sysid',$id)->get();
-                DB::table('t_deleted')
-                ->insert([
-                    'log_date'=>Date('Y-m-d H:i:s'),
-                    'notes'=>$rec['notes'],
-                    'doc_number'=>$data->doc_number,
-                    'module'=>'SPJ',
-                    'data'=>json_encode($row),
-                    'update_userid'=>PagesHelp::UserID($request)
-                ]);
-                Operation::where('sysid',$id)
-                ->update([
-                    'is_cancel'=>'1',
-                    'cancel_date'=>Date('Y-m-d'),
-                    'cancel_notes'=>$rec['notes'],
-                    'cancel_by'=>PagesHelp::UserID($request)
-                ]);
-                DB::commit();
-                return response()->success('Success', 'Order berhasil dibatalkan');
-            } else {
-                DB::rollback();
-                return response()->error('', 501, 'Data tidak ditemukan');
-            }
+            $info=Operation::selectRaw('checklist_doc,driver_id,helper_id,conductor_id')->where('sysid',$id)->first();
+            DB::update("UPDATE m_vehicle a INNER JOIN t_operation b ON a.vehicle_no=b.vehicle_no
+                    SET a.vehicle_status='Siap',last_operation=-1
+                    WHERE b.sysid=?",[$id]);
+            DB::update("UPDATE t_vehicle_checklist1 a INNER JOIN t_operation b ON a.vehicle_no=b.vehicle_no
+                    SET a.doc_ops='',sysid_ops=-1,is_used=0
+                    WHERE a.sysid_ops=?",[$id]);
+            Driver::where('employee_id',$info->driver_id)->update(['on_duty'=>'0']);
+            Driver::where('employee_id',$info->helper_id)->update(['on_duty'=>'0']);
+            Driver::where('employee_id',$info->conductor_id)->update(['on_duty'=>'0']);
+            $row['header']=Operation::where('sysid',$id)->first();
+            $row['detail']=DB::table('t_operation_route')->where('sysid',$id)->get();
+            DB::table('t_deleted')
+            ->insert([
+                'log_date'=>Date('Y-m-d H:i:s'),
+                'notes'=>$rec['notes'],
+                'doc_number'=>$data->doc_number,
+                'module'=>'SPJ',
+                'data'=>json_encode($row),
+                'update_userid'=>PagesHelp::UserID($request)
+            ]);
+            Operation::where('sysid',$id)
+            ->update([
+                'is_cancel'=>'1',
+                'cancel_date'=>Date('Y-m-d'),
+                'cancel_notes'=>$rec['notes'],
+                'cancel_by'=>PagesHelp::UserID($request)
+            ]);
+            DB::commit();
+            return response()->success('Success', 'Order berhasil dibatalkan');
         } catch (Exception $e) {
             DB::rollback();
             return response()->error('', 501, $e);

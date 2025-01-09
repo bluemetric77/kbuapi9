@@ -465,4 +465,13 @@ class Pages
       ]);
    }
 
+
+    public static function build_command(string $template, array $params): string
+    {
+        return str_replace(
+            array_map(fn($key) => "{" . $key . "}", array_keys($params)),
+            array_values($params),
+            $template
+        );
+    }
 }

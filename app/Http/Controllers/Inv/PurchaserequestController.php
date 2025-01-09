@@ -240,7 +240,7 @@ class PurchaserequestController extends Controller
                     'mou_inventory'=>$rec['mou_inventory'],
                     'po_id'       =>-1,
                     'po_number'   => '',
-                    'invoice_id'  => '',
+                    'invoice_id'  => '-1',
                     'invoice_no'  => '',
                     'current_stock'=>0,
                     'notes'=>$rec['notes'],

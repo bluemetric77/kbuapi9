@@ -13,4 +13,8 @@ class Employee extends Model
     public $timestamps = TRUE;
     const CREATED_AT = 'update_timestamp';
     const UPDATED_AT = 'update_timestamp';
+    protected $casts = [
+        'is_transfer' => 'string',
+        'is_active' => 'string',
+    ];
 }

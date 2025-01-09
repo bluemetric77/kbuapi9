@@ -143,13 +143,14 @@ class OutPaymentController extends Controller
 
         $validator=Validator::make($detail,[
             '*.no_account'=>'bail|required|exists:m_account,account_no',
-            '*.doc_number'=>'bail|required|exists:,t_customer_account,account_no',
+            '*.doc_number'=>'bail|required|exists:t_customer_account,doc_number',
         ],[
             '*.no_account.required'=>'Kode Akun harus diisi',
             '*.no_account.exists'=>'No.Akun [ :input ] tidak ditemukan dimaster akun',
             'doc_number.required'=>'Nomor invoice harus diisi',
             'doc_number.exists'=>'Nomor invoice  :input tidak ditemukan pada hutang supplier',
         ]);
+
         if ($validator->fails()){
             return response()->error('',501,$validator->errors()->first());
         }
@@ -203,7 +204,7 @@ class OutPaymentController extends Controller
                     sysid=?",[$sysid]);
             $validate=DB::table('t_customer_account')
                 ->where('partner_id',$header['partner_id'])
-                ->whereRaw("IFNULL(amount,0)<IFNULL(total_paid,0)")
+                ->whereRaw("IFNULL(amount,0)<IFNULL(total_paid,0) AND IFNULL(amount,0)>0")
                 ->first();
             if ($validate) {
                 DB::rollback();

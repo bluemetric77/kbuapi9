@@ -732,6 +732,23 @@ Route::group(['prefix' => 'humans', 'as' => 'humans','middleware'=>'appauth'], f
         Route::get('/meeting/print', 'print');
     });
 
+    Route::controller(\Humans\MachineController::class)->group(function () {
+        Route::get('/machine', 'show');
+        Route::get('/machine/get', 'get');
+        Route::delete('/machine', 'destroy');
+        Route::post('/machine', 'post');
+
+        Route::get('/machine/user', 'show_user');
+        Route::get('/machine/employee', 'show_employee');
+        Route::post('/machine/reboot', 'reboot');
+        Route::post('/machine/update_user', 'update_user');
+        Route::post('/machine/send_user', 'send_user');
+    });
+
+    Route::controller(\Humans\AttendanceController::class)->group(function () {
+        Route::get('/attendance', 'show');
+        Route::get('/attendance/get', 'get');
+    });
     Route::controller(\Humans\EmployeeController::class)->group(function () {
         Route::get('/employee', 'show');
         Route::get('/employee/get', 'get');
