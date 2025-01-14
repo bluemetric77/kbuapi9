@@ -50,6 +50,7 @@ class MachineController extends Controller
         ->where("uuid_rec",$uuid)->first();
         return response()->success('Success',$data);
     }
+
     public function post(Request $request){
         $data= $request->json()->all();
         $rec=$data['data'];
@@ -90,7 +91,7 @@ class MachineController extends Controller
     }
 
     public function getdevice(Request $request){
-        $data=Deicee::selectRaw("ID,DevSN,DevName")
+        $data=Device::selectRaw("ID,DevSN,DevName,CONCAT(DevSN,'-',DevName) as list")
              ->get();
         return response()->success('Success',$data);
     }
@@ -155,22 +156,50 @@ class MachineController extends Controller
         }
         return response()->success('Success','Mesin absensi '.$sn.' akan di restart');
     }
+    public function get_user(Request $request) {
+        $pin       = $request->pin;
+        $device_id = $request->device_id;
+
+        $userinfo  = UserInfo::where('PIN',$pin)
+                    ->where('DevSN',$device_id)
+                    ->first();
+
+        $employee = Employee::where('pin',$pin)->first();
+
+        if ($userinfo) {
+            $info=[
+                'PIN'      => $userinfo->PIN,
+                'UserName' => $employee->emp_name ?? $userinfo->UserName,
+                'Password' => $userinfo->Passwd,
+                'Pri'      => $userinfo->Pri,
+                'DevSN'    => $device_id,
+                'upload_FP'=>'0'
+            ];
+            return response()->success('Success',$info);
+        } else {
+            return response()->error('',501,'Data tida ditemukan');
+        }
+    }
 
     public function update_user(Request $request) {
-        $pin = $request->pin;
-        $sn  = $request->sn;
+        $pin       = $request->pin;
+        $sn        = $request->sn;
+        $name      = $request->name;
+        $pri       = $request->pri;
+        $password  = $request->password;
+        $isFP      = $request->isfp;
 
         $device   = Device::where("DevSN",$sn)->first();
-        $employee = Employee::where("pin",$pin)->first();
-        if (($employee) && ($device)){
-          $cmd=PagesHelp::build_command(Commands::COMMAND_UPDATE_USER_INFO, [
-            0 => $employee->pin,
-            1 => $employee->emp_name,
-            2 => '0',
-            3 => '',
-            4 => '',
-            5 => '',
-            6 => '000000100000000']);
+        if ($device) {
+            $cmd=PagesHelp::build_command(Commands::COMMAND_UPDATE_USER_INFO, [
+                0 => $pin,
+                1 => $name,
+                2 => $pri,
+                3 => $password,
+                4 => '',
+                5 => '1',
+                6 => '000000100000000'
+            ]);
 
             DeviceCmds::insert([
                 'DevSN'=>$device->DevSN,
@@ -179,13 +208,49 @@ class MachineController extends Controller
             ]);
 
             $cmd2=PagesHelp::build_command(Commands::COMMAND_QUERY_USER_INFO, [
-            0 => $employee->pin]);
+            0 => $pin]);
 
             DeviceCmds::insert([
                 'DevSN'=>$device->DevSN,
                 'Content'=>$cmd2,
                 'CommitTime'=>Date('Y-m-d H:i:s')
             ]);
+
+            #upload Fingger Print
+
+            if ($isFP==='1') {
+                $fps=TmpFP::where("PIN",$pin)->get();
+                foreach($fps as $line) {
+                    $cmd=PagesHelp::build_command(Commands::COMMAND_UPDATE_FINGER_TMP, [
+                        0 => $pin,
+                        1 => $line->Fid,
+                        2 => $line->Size,
+                        3 => $line->Valid,
+                        4 => $line->Tmp
+                    ]);
+
+                    DeviceCmds::insert([
+                        'DevSN'=>$device->DevSN,
+                        'Content'=>$cmd,
+                        'CommitTime'=>Date('Y-m-d H:i:s')
+                    ]);
+                }
+
+                foreach($fps as $line) {
+                    $cmd=PagesHelp::build_command(Commands::COMMAND_QUERY_FINGER_TMP, [
+                        0 => $pin,
+                        1 => $line->Fid
+                    ]);
+
+                    DeviceCmds::insert([
+                        'DevSN'=>$device->DevSN,
+                        'Content'=>$cmd,
+                        'CommitTime'=>Date('Y-m-d H:i:s')
+                    ]);
+                }
+
+
+            }
             return response()->success('Success','Perintah update data user dikirim');
         } else {
             return response()->error('',501,'Device '.$sn.' tidak ditemukan');
@@ -226,6 +291,16 @@ class MachineController extends Controller
 
         } else {
             return response()->error('',501,'Device '.$sn.' tidak ditemukan');
+        }
+    }
+    public function send_fingerprint(Request $request) {
+        $pin = $request->pin;
+        $sn  = $request->sn;
+
+        $device = Device::where("DevSN",$sn)->first();
+        $pfs    = TmpFP::where("PIN",$pin)->first();
+        if ($device && $pf) {
+
         }
     }
 }

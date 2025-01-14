@@ -737,12 +737,16 @@ Route::group(['prefix' => 'humans', 'as' => 'humans','middleware'=>'appauth'], f
         Route::get('/machine/get', 'get');
         Route::delete('/machine', 'destroy');
         Route::post('/machine', 'post');
+        Route::get('/machine/list', 'getdevice');
 
+        Route::get('/machine/get_user', 'get_user');
         Route::get('/machine/user', 'show_user');
         Route::get('/machine/employee', 'show_employee');
         Route::post('/machine/reboot', 'reboot');
         Route::post('/machine/update_user', 'update_user');
         Route::post('/machine/send_user', 'send_user');
+        Route::post('/machine/fingerprint', 'send_fingerprint');
+
     });
 
     Route::controller(\Humans\AttendanceController::class)->group(function () {
@@ -754,11 +758,18 @@ Route::group(['prefix' => 'humans', 'as' => 'humans','middleware'=>'appauth'], f
         Route::get('/employee/get', 'get');
         Route::delete('/employee', 'destroy');
         Route::post('/employee', 'post');
+
+        Route::get('/employee/list', 'employee_list');
         Route::get('/employee/print', 'print');
         Route::get('/employee/document', 'document');
         Route::post('/employee/photo', 'uploadfoto');
         Route::get('/employee/photo', 'downloadfoto');
         Route::delete('/employee/photo', 'deletefoto');
+
+        Route::get('/employee/family', 'family');
+        Route::get('/employee/family/get', 'get_family');
+        Route::post('/employee/family', 'post_family');
+        Route::delete('/employee/family', 'delete_family');
     });
 
     Route::controller(\Humans\DepartmentController::class)->group(function () {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Humans;
 
 use App\Models\Humans\Employee;
+use App\Models\Humans\EmployeeFamily;
 use App\Models\General\Documents;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -37,21 +38,50 @@ class EmployeeController extends Controller
 
         return response()->success('Success',$data);
     }
+    public function employee_list(Request $request) {
+        $data=Employee::selectRaw("emp_id,emp_name,CONCAT(emp_name,'-',emp_id) as emplist")
+        ->where('is_active',1)
+        ->orderBy('emp_name','asc')
+        ->get();
 
+        return response()->success('Success',$data);
+    }
     public function destroy(Request $request){
         $uuid=$request->uuid_rec;
         $data=Employee::where('uuid_rec',$uuid)->first();
-        if ($data) {
-            $data->delete();
+
+        if (!$data) {
+          return response()->error('',501,'Data tidak ditemukan');
+        }
+
+        DB::beginTransaction();
+        try{
+            Employee::where('sysid',$data->sysid)->delete();
+            EmployeeFamily::where('sysid',$data->sysid)->delete();
+            Documents::where('doc_number',$data->emp_id)
+            ->where('doc_type','EMP')
+            ->delete();
+
+            DB::commit();
+
             return response()->success('Success','Data berhasil dihapus');
-        } else {
-           return response()->error('',501,'Data tidak ditemukan');
+        }catch(Exception $e){
+            DB::rollback();
+            return response()->error('',501,$e);
         }
     }
     public function get(Request $request){
         $uuid_rec=$request->uuid_rec;
-        $data=Employee::where('uuid_rec',$uuid_rec)->first();
+        $emp    = Employee::where('uuid_rec',$uuid_rec)->first();
+        $family = EmployeeFamily::selectRaw('line_id,sysid,name,pob,dob,enum_sex,relation,bpjs_number,citizen_number,uuid_rec')
+        ->where('sysid',$emp->sysid ?? -1)->get();
+
+        $data = [
+            'employee'=>$emp,
+            'family'=>$family
+        ];
         return response()->success('Success',$data);
+
     }
     public function document(Request $request){
         $id=$request->emp_id;
@@ -61,10 +91,10 @@ class EmployeeController extends Controller
         ->get();
         return response()->success('Success',$data);
     }
+
     public function post(Request $request){
         $data = $request->json()->all();
         $rec  = $data['data'];
-        $rec['pool_code']=PagesHelp::PoolCode($request);
 
         $validator=Validator::make($rec,[
             'emp_id'=>'bail|required',
@@ -92,22 +122,40 @@ class EmployeeController extends Controller
             }
             $employe->emp_id = $rec['emp_id'];
             $employe->emp_name = $rec['emp_name'];
-            $employe->pin      = $rec['pin'];
-            $employe->dob      = $rec['dob'];
+            $employe->enum_sex = $rec['enum_sex'] ?? '';
+            $employe->pin      = $rec['pin'] ?? '';
+            $employe->dob      = $rec['dob'] ?? '';
             $employe->pob      = $rec['pob'];
-            $employe->current_address = $rec['current_address'];
+            $employe->current_address = $rec['current_address'] ?? '';
             $employe->dept_id   = $rec['dept_id'];
             $employe->emp_level = $rec['emp_level'];
-            $employe->hire_date = $rec['hire_date'];
+            $employe->hire_date = $rec['hire_date'] ?? null;
             $employe->resign_date = $rec['resign_date'] ?? null;
+            $employe->bpjs_id     = $rec['bpjs_id'] ?? '';
+            $employe->jamsostek_id= $rec['jamsostek_id'] ?? '';
+            $employe->number_insured= $rec['number_insured'] ?? 0;
             $employe->experience  = $rec['experience'];
             $employe->education   = $rec['education'];
             $employe->training    = $rec['training'];
             $employe->pool_code     = $rec['pool_code'];
-            $employe->phone_number1 = $rec['phone_number1'];
-            $employe->phone_number2 = $rec['phone_number2'];
-            $employe->email     = $rec['email'];
-            $employe->is_active = $rec['is_active'] ?? '1';
+            $employe->is_active     = $rec['is_active'] ?? '1';
+
+            $employe->marital_state   = $rec['marital_state'] ?? 'Single';
+            $employe->citizen_number  = $rec['citizen_number'] ?? '';
+            $employe->mother_name     = $rec['mother_name'] ?? '';
+            $employe->couple_name     = $rec['couple_name'] ?? '';
+            $employe->phone_number1   = $rec['phone_number1'];
+            $employe->phone_number2   = $rec['phone_number2'];
+            $employe->email           = $rec['email'] ?? '';
+
+            $employe->emergency_contact = $rec['emergency_contact'] ?? '';
+            $employe->emergency_address = $rec['emergency_address'];
+            $employe->emergency_phone   = $rec['emergency_phone'];
+
+            $employe->bank_name      = $rec['bank_name'] ?? '';
+            $employe->account_name   = $rec['account_name'] ?? '';
+            $employe->account_number = $rec['account_number'] ?? '';
+            $employe->is_transfer    = $rec['is_transfer'] ?? '0';
             $employe->save();
 
             return response()->success('Success','Simpan data Berhasil');
@@ -115,6 +163,7 @@ class EmployeeController extends Controller
             return response()->error('',501,$e);
         }
     }
+
     public function change_pool(Request $request){
         $data= $request->json()->all();
         $where=$data['where'];
@@ -185,4 +234,85 @@ class EmployeeController extends Controller
             ->update(['photo'=>'-']);
         return response()->success('Success','Hapus data berhasil');
     }
+    public function family(Request $request){
+        $uuid_rec=$request->uuid_rec;
+
+        $emp=Employee::selectRaw("sysid")
+        ->where('uuid_rec',$uuid_rec)->first();
+
+        $data= EmployeeFamily::selectRaw('line_id,sysid,relation,name,pob,dob,enum_sex,bpjs_number,citizen_number,uuid_rec')
+        ->where('sysid',$emp->sysid ?? -1)->get();
+
+        return response()->success('Success',$data);
+    }
+
+    public function post_family(Request $request){
+        $data = $request->json()->all();
+        $rec  = $data['data'];
+
+        $validator=Validator::make($rec,[
+            'sysid'=>'bail|required|exists:m_employee,sysid',
+            'relation'=>'bail|required',
+            'name'=>'bail|required'
+        ],[
+            'sysid.required'=>'ID karyawan harus diisi',
+            'sysid.exists'=>'ID karyawan tidak ditemukan dimaster',
+            'relation.required'=>'Releasi keluarga denganb karyawan harus diisi',
+            'name.required'=>'Nama keluarga harus diisi'
+        ]);
+
+        if ($validator->fails()){
+            return response()->error('',501,$validator->errors()->first());
+        }
+        $rec['update_timestamp']=Date('Y-m-d H:i:s');
+        try{
+            $family=EmployeeFamily::where('uuid_rec',$rec['uuid_rec'] ??'')->first();
+            if (!$family) {
+                $family= new EmployeeFamily();
+                $family->uuid_rec=Str::uuid();
+            }
+            $family->sysid    = $rec['sysid'];
+            $family->name     = $rec['name'];
+            $family->relation = $rec['relation'];
+            $family->enum_sex = $rec['enum_sex'] ?? '';
+            $family->dob      = $rec['dob'];
+            $family->pob      = $rec['pob'] ?? '';
+            $family->bpjs_number      = $rec['bpjs_number'] ?? '';
+            $family->citizen_number   = $rec['citizen_number'];
+            $family->update_timestamp = Date('Y-m-d H:i:s');
+            $family->update_userid    = PagesHelp::Session()->user_id;
+            $family->save();
+
+            return response()->success('Success','Simpan data Berhasil');
+		} catch (Exception $e) {
+            return response()->error('',501,$e);
+        }
+    }
+    public function get_family(Request $request){
+        $uuid_rec=$request->uuid_rec;
+        $data=EmployeeFamily::selectRaw('line_id,sysid,relation,name,pob,dob,enum_sex,bpjs_number,citizen_number,uuid_rec')
+        ->where('uuid_rec',$uuid_rec ?? -'')->first();
+
+        return response()->success('Success',$data);
+    }
+
+    public function delete_family(Request $request){
+        $uuid=$request->uuid_rec;
+        $data=EmployeeFamily::where('uuid_rec',$uuid)->first();
+
+        if (!$data) {
+          return response()->error('',501,'Data tidak ditemukan');
+        }
+
+        DB::beginTransaction();
+        try{
+            EmployeeFamily::where('line_id',$data->line_id)->delete();
+            DB::commit();
+            return response()->success('Success','Data berhasil dihapus');
+        }catch(Exception $e){
+            DB::rollback();
+            return response()->error('',501,$e);
+        }
+    }
+
 }

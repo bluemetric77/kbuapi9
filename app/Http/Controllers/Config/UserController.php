@@ -57,7 +57,7 @@ class UserController extends Controller
     {
         $uuid=$request->uuid ?? '';
         $data= Users::selectRaw("sysid,user_id,user_name,user_level,photo,sign,email,is_group,
-        is_suspend,phone,security_level,security_group,uuid_rec")
+        is_suspend,phone,security_level,security_group,emp_id,uuid_rec")
         ->where('uuid_rec',$uuid)
         ->first();
         $server=PagesHelp::my_server_url();
@@ -105,6 +105,7 @@ class UserController extends Controller
                 'is_group'       => $row['is_group'],
                 'security_group' => $row['security_group'],
                 'update_by' => $session->user_id,
+                'emp_id'    => $row['emp_id'] ?? '',
                 'update_date'=> now()
             ]);
             $user->save();

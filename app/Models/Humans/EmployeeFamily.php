@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use PagesHelp;
 
-class Department extends Model
+class EmployeeFamily extends Model
 {
-    protected $table = 'm_department';
-    protected $primaryKey = 'sysid';
+    protected $table = 'm_employee_family';
+    protected $primaryKey = 'line_id';
     public $timestamps = TRUE;
     const CREATED_AT = 'update_timestamp';
     const UPDATED_AT = 'update_timestamp';
