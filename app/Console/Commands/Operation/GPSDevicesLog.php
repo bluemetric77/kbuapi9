@@ -4,9 +4,9 @@ namespace App\Console\Commands\Operation;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use App\Master\Vehicle;
-use App\Master\Devices;
-use App\Ops\DeviceLog;
+use App\Models\Master\Vehicle;
+use App\Models\Master\Devices;
+use App\Models\Ops\DeviceLog;
 use PagesHelp;
 
 class GPSDevicesLog extends Command
@@ -49,7 +49,7 @@ class GPSDevicesLog extends Command
         $url=$config->key_value_nvarchar;
         $token=PagesHelp::GetToken();
         if ($token==''){
-            PagesHelp::GenerateToken();    
+            PagesHelp::GenerateToken();
             $token=PagesHelp::GetToken();
         }
         if (!($token=='')) {
@@ -93,7 +93,7 @@ class GPSDevicesLog extends Command
                             }
                         }
                     } else if ($json['status_code']==403) {
-                        PagesHelp::GenerateToken();    
+                        PagesHelp::GenerateToken();
                         $token=PagesHelp::GetToken();
                     }
                 }

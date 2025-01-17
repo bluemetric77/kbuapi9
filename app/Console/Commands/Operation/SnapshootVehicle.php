@@ -4,7 +4,7 @@ namespace App\Console\Commands\Operation;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use App\Master\Vehicle;
+use App\Models\Master\Vehicle;
 
 class SnapshootVehicle extends Command
 {
@@ -48,7 +48,7 @@ class SnapshootVehicle extends Command
                         SET item_status='Canceled',line_cancel=qty_request-line_supply
                         WHERE sysid=? AND qty_request>line_supply
                         ",[$row->sysid]);
-            
+
             DB::table('t_purchase_request1')
             ->where('sysid',$row->sysid)
             ->update(['request_status'=>'Complete']);

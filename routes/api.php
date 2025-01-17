@@ -752,6 +752,7 @@ Route::group(['prefix' => 'humans', 'as' => 'humans','middleware'=>'appauth'], f
     Route::controller(\Humans\AttendanceController::class)->group(function () {
         Route::get('/attendance', 'show');
         Route::get('/attendance/get', 'get');
+        Route::get('/attendance/daily', 'show_daily');
     });
     Route::controller(\Humans\EmployeeController::class)->group(function () {
         Route::get('/employee', 'show');

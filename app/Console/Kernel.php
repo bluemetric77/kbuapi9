@@ -17,7 +17,8 @@ class Kernel extends ConsoleKernel
         'App\Console\Commands\Operation\SnapshootVehicle',
         'App\Console\Commands\Operation\GPSDevices',
         'App\Console\Commands\Operation\GPSDevicesLog',
-        'App\Console\Commands\Accounting\Reposting'
+        'App\Console\Commands\Accounting\Reposting',
+        'App\Console\Commands\Humans\AttendanceLog',
     ];
 
     protected function schedule(Schedule $schedule)
@@ -26,6 +27,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('gps:device')->hourly();
         $schedule->command('gps:sync')->everyTenMinutes();
         //$schedule->command('accounting:reposting')->everyMinute();
+        $schedule->command('humans:attlog')->everyMinute();
     }
 
     /**

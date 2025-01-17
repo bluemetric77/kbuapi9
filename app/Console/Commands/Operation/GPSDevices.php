@@ -4,8 +4,8 @@ namespace App\Console\Commands\Operation;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use App\Master\Vehicle;
-use App\Master\Devices;
+use App\Models\Master\Vehicle;
+use App\Models\Master\Devices;
 use PagesHelp;
 
 class GPSDevices extends Command
@@ -48,7 +48,7 @@ class GPSDevices extends Command
         $url=$config->key_value_nvarchar;
         $token=PagesHelp::GetToken();
         if ($token==''){
-            PagesHelp::GenerateToken();    
+            PagesHelp::GenerateToken();
             $token=PagesHelp::GetToken();
         }
         $devices=null;
@@ -62,9 +62,9 @@ class GPSDevices extends Command
         $devices_unit=null;
         if ($devices){
             if ($devices['status_code']==200){
-                $devices_unit=$devices['data'][0]['devices'];                
+                $devices_unit=$devices['data'][0]['devices'];
             } else if ($devices['status_code']==403){
-                PagesHelp::GenerateToken();    
+                PagesHelp::GenerateToken();
             }
         }
         foreach ($devices_unit as $unit){
@@ -107,7 +107,7 @@ class GPSDevices extends Command
                     'real_device_id'=>$unit['real_device_id'],
                     'update_timestamp'=>$unit['updated_at']
                     ]);
-            }                
+            }
         }
         /** Create logs*/
         $enddate=Date('Y-m-d H:i:s');

@@ -102,12 +102,14 @@ class EmployeeController extends Controller
             'current_address'=>'bail|required',
             'phone_number1'=>'bail|required',
             'pin'=>'bail|required',
+            'dob'=>'bail|required',
         ],[
             'emp_id.required'=>'ID karyawan harus diisi',
             'emp_id.required'=>'Nama karaywan harus diisi',
             'current_address.required'=>'Alamat harus diisi',
             'phone_number1.required'=>'No. Telepon 1 harus diisi',
             'pin.required'=>'ID Absensi haru di ',
+            'dob.required'=>'Tanggal lahir haru di ',
         ]);
 
         if ($validator->fails()){
