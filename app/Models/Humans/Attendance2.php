@@ -13,4 +13,7 @@ class Attendance2 extends Model
     public $timestamps = false;
     const CREATED_AT = 'update_timestamp';
     const UPDATED_AT = 'update_timestamp';
+    protected $casts = [
+        'is_holiday' => 'integer'
+    ];
 }

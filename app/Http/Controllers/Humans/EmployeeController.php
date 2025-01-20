@@ -317,4 +317,27 @@ class EmployeeController extends Controller
         }
     }
 
+    public function show_employee(Request $request){
+        $filter     = isset($request->filter) ? $request->filter :'';
+        $limit      = $request->limit;
+        $sorting    = ($request->descending=="true") ? 'desc':'asc';
+        $sortBy = $request->sortBy;
+
+        $data= Employee::from('m_employee as a')
+        ->selectRaw('a.pool_code,a.sysid,a.emp_id,a.emp_name,a.pin,a.uuid_rec')
+        ->leftjoin('m_department as b','a.dept_id','=','b.sysid')
+        ->where('a.is_active',1);
+
+        if (!($filter=='')){
+            $filter='%'.trim($filter).'%';
+            $data=$data->where('a.emp_id','like',$filter)
+               ->orwhere('a.emp_name','like',$filter)
+               ->orwhere('a.pin','like',$filter);
+        }
+
+        $data=$data->orderBy($sortBy,$sorting)->paginate($limit);
+
+        return response()->success('Success',$data);
+    }
+
 }

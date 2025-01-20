@@ -746,19 +746,33 @@ Route::group(['prefix' => 'humans', 'as' => 'humans','middleware'=>'appauth'], f
         Route::post('/machine/update_user', 'update_user');
         Route::post('/machine/send_user', 'send_user');
         Route::post('/machine/fingerprint', 'send_fingerprint');
-
     });
 
     Route::controller(\Humans\AttendanceController::class)->group(function () {
         Route::get('/attendance', 'show');
         Route::get('/attendance/get', 'get');
         Route::get('/attendance/daily', 'show_daily');
+        Route::get('/attendance/employee', 'attendance');
+        Route::get('/attendance/summary', 'attendance_summary');
+        Route::get('/attendance/edit', 'get_attendance');
+        Route::post('/attendance/save', 'post_attendance');
     });
+
+    Route::controller(\Humans\AttendancePrintController::class)->group(function () {
+        Route::get('/attendance/log/print', 'print_attendance_log');
+        Route::get('/attendance/log/download', 'download_attendance_log');
+        Route::get('/attendance/daily/print', 'print_attendance_daily');
+        Route::get('/attendance/daily/download', 'download_attendance_daily');
+        Route::get('/attendance/employee/print', 'print_attendance_employee');
+        Route::get('/attendance/employee/download', 'download_attendance_employee');
+    });
+
     Route::controller(\Humans\EmployeeController::class)->group(function () {
         Route::get('/employee', 'show');
         Route::get('/employee/get', 'get');
         Route::delete('/employee', 'destroy');
         Route::post('/employee', 'post');
+        Route::get('/employee/view', 'show_employee');
 
         Route::get('/employee/list', 'employee_list');
         Route::get('/employee/print', 'print');
